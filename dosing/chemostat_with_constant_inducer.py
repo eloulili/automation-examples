@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from pioreactor.automations import events
-from pioreactor.automations.dosing.base import DosingAutomationJob
+from pioreactor.automations.dosing.base import DosingAutomationJobContrib
 from pioreactor.exc import CalibrationError
 from pioreactor.utils import local_persistant_storage
 
 
-class ChemostatWithInducer(DosingAutomationJob):
+class ChemostatWithInducer(DosingAutomationJobContrib):
 
     automation_name = "chemostat_with_inducer"
     published_settings = {
