@@ -1,0 +1,18 @@
+display_name: Random temperature profile # human readable name
+automation_name: RandomTemperature # automation name as defined in your Python files
+source: # name of your plugin
+description: Profile with a temperature randomly chosen every X minutes # description of your plugin
+fields:
+  - key: min_temperature # as defined in Python
+    unit: °C # unit of your key
+    label: Minimum temperature # human readable name
+    description: The minimum temperatuche which can be randomly chosen # description of your key
+  - key: max_temperature # as defined in Python
+    unit: °C # unit of your key
+    label: Maximum temperature # human readable name
+    description: The minimum temperatuche which can be randomly chosen # description of your key
+  - key: duration
+    unit: min
+    label: Duration
+    description: time between each update of temperature
+    

@@ -1,0 +1,2 @@
+recursive-include Automation plugin/ui/ *.yaml
+include Automation plugin/additional_config.ini
