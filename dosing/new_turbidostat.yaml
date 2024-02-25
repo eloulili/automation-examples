@@ -1,0 +1,22 @@
+display_name: Turbi # human readable name
+automation_name: AdaptedTurbidostat # automation name as defined in your Python files
+source: new_turbidostat.py # name of your plugin
+description: Turbidostat which pumps until a minimum bound is reached # description of your plugin
+fields:
+  - key: min_OD # as defined in Python
+    unit: AU # unit of your key
+    label: Minimum OD # human readable name
+    default: 2
+  - key: max_OD # as defined in Python
+    unit: AU # unit of your key
+    label: Maximum OD # human readable name
+    default: 2.5
+  - key: duration
+    unit: min
+    label: Duration
+    default: 0.5
+  - key: volume
+    unit: mL
+    label: Pumped Volume
+    default: 0.4
+    

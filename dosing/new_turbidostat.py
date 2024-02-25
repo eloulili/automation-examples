@@ -28,6 +28,10 @@ class AdaptedTurbidostat(DosingAutomationJobContrib):
 
     def execute(self):
         if self.latest_od > self.max_od:
+            if self.is_pumping : 
+                self.volume += 0.1
+                # if we are already pumping but the od is still above the maximum
+                # it means that we do not pump enough, and then we increase the volume pumped
             self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
             self.is_pumping = True
         elif self.latest_od > self.min_od and self.is_pumping :
