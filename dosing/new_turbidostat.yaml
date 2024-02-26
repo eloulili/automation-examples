@@ -19,10 +19,6 @@ fields:
     unit: min
     label: Check Interval
     default: 1
-  - key: use_normalized_od
-    label: Use Normalized OD
-    datatype: bool
-    default: false
   - key: max_normalized_od
     unit: AU
     label: Maximum Normalized OD
