@@ -19,8 +19,8 @@ class AdaptedTurbidostat(DosingAutomationJob):
         "volume": {"datatype": "float", "settable": True, "unit": "mL"},
         "max_od": {"datatype": "float", "settable": True, "unit": "OD"},
         "min_od": {"datatype": "float", "settable": True, "unit": "OD"},
-        "max_normalized_od": {"datatype": "float", "settable": True},
-        "min_normalized_od": {"datatype": "float", "settable": True},
+        "max_normalized_od": {"datatype": "float", "settable": True, "unit": "AU"},
+        "min_normalized_od": {"datatype": "float", "settable": True, "unit": "AU"},
         "use_normalized_od": {"datatype": "bool", "settable": True},
         "duration": {"datatype": "float", "settable": True, "unit": "min"},
     }

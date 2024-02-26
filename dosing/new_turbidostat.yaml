@@ -1,7 +1,6 @@
 display_name: Adapted Turbidostat  # human readable name
-automation_name: AdaptedTurbidostat  # automation name as defined in your Python files
+automation_name: adapted_turbidostat  # automation name as defined in your Python files
 source: new_turbidostat.py  # name of your plugin
-description: Turbidostat which adjusts media volume based on OD levels  # description of your plugin
 fields:
   - key: volume  # as defined in Python
     unit: mL  # unit of your key
@@ -19,6 +18,10 @@ fields:
     unit: min
     label: Check Interval
     default: 1
+  - key: use_normalized_od
+    label: Use Normalized OD
+    datatype: bool
+    default: false
   - key: max_normalized_od
     unit: AU
     label: Maximum Normalized OD
