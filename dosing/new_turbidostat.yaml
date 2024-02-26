@@ -1,6 +1,6 @@
 display_name: Adapted Turbidostat  # human readable name
 automation_name: adapted_turbidostat  # automation name as defined in your Python files
-source: new_turbidostat.py  # name of your plugin
+source: new_turbidostat  # name of your plugin
 fields:
   - key: volume  # as defined in Python
     unit: mL  # unit of your key
