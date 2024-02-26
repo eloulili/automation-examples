@@ -1,55 +1,143 @@
 # -*- coding: utf-8 -*-
-"""
-run on the command line with
-$ python3 new_turbidostat.py
+from __future__ import annotations
 
-Exit with ctrl-c
-"""
-from pioreactor.automations.dosing.base import DosingAutomationJobContrib
+from typing import Optional
+
+from pioreactor.automations import events
+from pioreactor.automations.dosing.base import DosingAutomationJob
+from pioreactor.exc import CalibrationError
+from pioreactor.utils import local_persistant_storage
 
 
-class AdaptedTurbidostat(DosingAutomationJobContrib):
+class AdaptedTurbidostat(DosingAutomationJob):
+    """
+    Adapted Turbidostat mode - adjust media volume based on OD levels
+    """
 
     automation_name = "adapted_turbidostat"
     published_settings = {
-        "max_od": {"datatype": "float", "settable": True, "unit": "AU"},
-        "min_od": {"datatype": "float", "settable": True, "unit": "AU"},
-        "volume": {"datatype": "float", "settable": True, "unit": "mL"}
+        "volume": {"datatype": "float", "settable": True, "unit": "mL"},
+        "max_od": {"datatype": "float", "settable": True, "unit": "OD"},
+        "min_od": {"datatype": "float", "settable": True, "unit": "OD"},
+        "max_normalized_od": {"datatype": "float", "settable": True},
+        "min_normalized_od": {"datatype": "float", "settable": True},
+        "use_normalized_od": {"datatype": "bool", "settable": True},
+        "duration": {"datatype": "float", "settable": True, "unit": "min"},
     }
 
-    def __init__(self, max_od, min_od, volume ,**kwargs):
+    def __init__(
+        self,
+        volume: float | str,
+        max_od: Optional[float | str] = None,
+        min_od: Optional[float | str] = None,
+        max_normalized_od: Optional[float | str] = None,
+        min_normalized_od: Optional[float | str] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
-
-
-        self.max_od = max_od
-        self.min_od = min_od
-        self.volume = volume 
-        self.is_pumping = False
-
-    def execute(self):
-        if self.latest_od > self.max_od:
-            if self.is_pumping : 
-                self.volume += 0.1
-                # if we are already pumping but the od is still above the maximum
-                # it means that we do not pump enough, and then we increase the volume pumped
-            self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
-            self.is_pumping = True
-        elif self.latest_od > self.min_od and self.is_pumping :
-            self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
-        elif self.latest_od < self.min_od :
+        use_normalized_od = min_normalized_od is not None and max_normalized_od is not None
+        use_od = min_od is not None and max_od is not None
+        with local_persistant_storage("current_pump_calibration") as cache:
+            if "media" not in cache:
+                raise CalibrationError("Media pump calibration must be performed first.")
+            elif "waste" not in cache:
+                raise CalibrationError("Waste pump calibration must be performed first.")
+        if not (use_normalized_od or use_od):
+            raise ValueError("Provide values for normalized od or raw od")
+        if use_normalized_od:
+            if use_od:
+                raise ValueError("Do not use both od ans normalized od")
+            if max_normalized_od is None or min_normalized_od is None:
+                raise ValueError("Provide both max normalized OD and min normalized OD.")
+            self.max_normalized_od = float(max_normalized_od)
+            self.min_normalized_od = float(min_normalized_od)
             self.is_pumping = False
+            self.use_normalized_od = True
+        else:
+            if max_od is None or min_od is None:
+                raise ValueError("Provide both max OD and min OD.")
+            self.max_od = float(max_od)
+            self.min_od = float(min_od)
+            self.is_pumping = False
+            self.use_normalized_od = False
+
+        self.volume = float(volume)
+
+    def execute(self) -> Optional[events.DilutionEvent]:
+        if self.use_normalized_od:
+            if self.latest_normalized_od >= self.max_normalized_od:
+                if self.is_pumping:
+                    # If the pump is already active and the  OD is still above the maximum, it means that we do not pump fast enough
+                    self.volume += 0.1
+                # Start or continue pumping if normalized OD is above the maximum threshold
+                return self._execute_max_normalized_od()
+            elif self.is_pumping and self.latest_normalized_od >= self.min_normalized_od:
+                # Continue pumping if already in the pumping state and normalized OD is above the minimum threshold
+                return self._execute_pumping()
+            else:
+                return None
+        else:
+            if self.latest_od["2"] >= self.max_od:
+                if self.is_pumping:
+                    # Same as before
+                    self.volume += 0.1
+                # Start or continue pumping if OD is above the maximum threshold
+                return self._execute_max_od()
+            elif self.is_pumping and self.latest_od["2"] >= self.min_od:
+                # Continue pumping if already in the pumping state and OD is above the minimum threshold
+                return self._execute_pumping()
+            else:
+                return None
+            
+
+        # Dans la fonction _execute_max_normalized_od
+    def _execute_max_normalized_od(self) -> Optional[events.DilutionEvent]:
+        # Start pumping if normalized OD is above the maximum threshold
+        self.is_pumping = True
+        return self._execute_pumping_normalized_od()
+
+    # Dans la fonction _execute_pumping_normalized_od
+    def _execute_pumping_normalized_od(self) -> Optional[events.DilutionEvent]:
+        # Continue pumping until normalized OD is below the minimum threshold
+        if self.latest_normalized_od >= self.min_normalized_od:
+            latest_normalized_od_before_dosing = self.latest_normalized_od
+            target_normalized_od_before_dosing = self.min_normalized_od
+            results = self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
+            media_moved = results["media_ml"]
+            return events.DilutionEvent(
+                f"Latest Normalized OD = {latest_normalized_od_before_dosing:.2f} ≥ Min Normalized OD = {target_normalized_od_before_dosing:.2f}; cycled {media_moved:.2f} mL",
+                {
+                    "latest_normalized_od": latest_normalized_od_before_dosing,
+                    "target_normalized_od": target_normalized_od_before_dosing,
+                    "volume": media_moved,
+                },
+            )
+        else:
+            self.is_pumping = False
+            return None
 
 
-if __name__ == "__main__":
-    from pioreactor.background_jobs.dosing_control import DosingController
+    def _execute_max_od(self) -> Optional[events.DilutionEvent]:
+        # Start pumping if OD is above the maximum threshold
+        self.is_pumping = True
+        return self._execute_pumping()
 
-    dc = DosingController(
-        "adapted_turbidostat",
-        max_od=2.0,
-        min_od= 1.9,
-        volume = 0.1,
-        duration=1,  # check every 1 minute
-        unit="test_unit",
-        experiment="test_experiment",
-    )
-    dc.block_until_disconnected()
+
+    def _execute_pumping(self) -> Optional[events.DilutionEvent]:
+        # Continue pumping until OD is below the minimum threshold
+     if self.latest_od["2"] >= self.min_od:
+         latest_od_before_dosing = self.latest_od["2"]
+         target_od_before_dosing = self.min_od
+         results = self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
+         media_moved = results["media_ml"]
+         return events.DilutionEvent(
+             f"Latest OD = {latest_od_before_dosing:.2f} ≥ Min OD = {target_od_before_dosing:.2f}; cycled {media_moved:.2f} mL",
+             {
+                 "latest_od": latest_od_before_dosing,
+                 "target_od": target_od_before_dosing,
+                 "volume": media_moved,
+             },
+         )
+     else:
+         self.is_pumping = False
+         return None
