@@ -28,10 +28,10 @@ class AdaptedTurbidostat(DosingAutomationJob):
     def __init__(
         self,
         volume: float | str,
-        max_od: Optional[float] = None,
-        min_od: Optional[float] = None,
-        max_normalized_od: Optional[float] = None,
-        min_normalized_od: Optional[float] = None,
+        max_od: float,
+        min_od: float,
+        max_normalized_od: float,
+        min_normalized_od: float,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -48,17 +48,9 @@ class AdaptedTurbidostat(DosingAutomationJob):
             raise ValueError("Provide OD values")
 
         if use_normalized_od:
-            if max_normalized_od is None or min_normalized_od is None:
-                raise ValueError("Provide both max normalized OD and min normalized OD.")
-            self.max_normalized_od = float(max_normalized_od)
-            self.min_normalized_od = float(min_normalized_od)
             self.is_pumping = False
             self.use_normalized_od = True
         else:
-            if max_od is None or min_od is None:
-                raise ValueError("Provide both max OD and min OD.")
-            self.max_od = float(max_od)
-            self.min_od = float(min_od)
             self.is_pumping = False
             self.use_normalized_od = False
 
