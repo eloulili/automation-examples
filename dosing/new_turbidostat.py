@@ -32,21 +32,18 @@ class AdaptedTurbidostat(DosingAutomationJob):
         min_od: Optional[float | str] = None,
         max_normalized_od: Optional[float | str] = None,
         min_normalized_od: Optional[float | str] = None,
+        use_normalized_od: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        use_normalized_od = min_normalized_od is not None and max_normalized_od is not None
-        use_od = min_od is not None and max_od is not None
+
         with local_persistant_storage("current_pump_calibration") as cache:
             if "media" not in cache:
                 raise CalibrationError("Media pump calibration must be performed first.")
             elif "waste" not in cache:
                 raise CalibrationError("Waste pump calibration must be performed first.")
-        if not (use_normalized_od or use_od):
-            raise ValueError("Provide values for normalized od or raw od")
+
         if use_normalized_od:
-            if use_od:
-                raise ValueError("Do not use both od ans normalized od")
             if max_normalized_od is None or min_normalized_od is None:
                 raise ValueError("Provide both max normalized OD and min normalized OD.")
             self.max_normalized_od = float(max_normalized_od)
