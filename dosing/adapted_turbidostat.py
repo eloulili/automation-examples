@@ -21,7 +21,6 @@ class AdaptedTurbidostat(DosingAutomationJob):
         "min_od": {"datatype": "float", "settable": True, "unit": "OD"},
         "max_normalized_od": {"datatype": "float", "settable": True, "unit": "AU"},
         "min_normalized_od": {"datatype": "float", "settable": True, "unit": "AU"},
-        "use_normalized_od": {"datatype": "bool", "settable": True},
         "duration": {"datatype": "float", "settable": True, "unit": "min"},
     }
 
@@ -30,13 +29,13 @@ class AdaptedTurbidostat(DosingAutomationJob):
         volume: float | str,
         max_od: float,
         min_od: float,
-        max_normalized_od: float,
-        min_normalized_od: float,
+        max_normalized_od: Optional[float | str],
+        min_normalized_od: Optional[float | str],
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        use_normalized_od = min_normalized_od > 0. and max_normalized_od > 0.
-        use_raw_od = min_od > 0. and max_od > 0.
+        use_normalized_od = min_normalized_od is not None and max_normalized_od is not None
+        use_raw_od = min_od is not None and max_od is not None
         with local_persistant_storage("current_pump_calibration") as cache:
             if "media" not in cache:
                 raise CalibrationError("Media pump calibration must be performed first.")
