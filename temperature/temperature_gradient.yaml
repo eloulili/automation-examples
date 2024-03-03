@@ -1,0 +1,17 @@
+display_name: Temperature Growth  # human readable name
+automation_name: temperature_gradient  # automation name as defined in your Python files
+source: temperature_gradient  # name of your plugin
+description: Increases the temperature from a minimum to the maximal temperature in the targeted time
+fields:
+  - key: start_temperature  # as defined in Python
+    unit: °C  # unit of your key
+    label: Start Temperature  # human-readable name
+    default: null
+  - key: final_target_temperature  # as defined in Python
+    unit: °C  # unit of your key
+    label: Final Temperature  # human-readable name
+    default: null
+  - key: time_to_reach  # as defined in Python
+    unit: min  # unit of your key
+    label: Time to reach  # human-readable name
+    default: null
