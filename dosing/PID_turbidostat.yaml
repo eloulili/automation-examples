@@ -1,0 +1,19 @@
+display_name: Adapted Turbidostat  # human readable name
+automation_name: pid_turbidostat  # automation name as defined in your Python files
+source: PID_turbidostat  # name of your plugin
+description: Turbidostat in which uses PID method to keep the (normalized or raw) od constant.
+fields:
+  - key: target_od  # as defined in Python
+    unit: OD  # unit of your key
+    label: Target OD  # human-readable name
+    default: null
+  - key: target_normalized_od  # as defined in Python
+    unit: AU  # unit of your key
+    label: Target nOD  # human-readable name
+    default: null
+  - key: duration
+    unit: min
+    label: Check Interval
+    default: 1
+
+    
