@@ -5,15 +5,15 @@ from typing import Optional
 
 from pioreactor.automations import events
 from pioreactor.automations.dosing.base import DosingAutomationJob
+from pioreactor.config import config
 from pioreactor.exc import CalibrationError
 from pioreactor.utils import local_persistant_storage
-
+from pioreactor.utils.streaming_calculations import PID
 
 class PIDTurbidostat(DosingAutomationJob):
     """
-    Turbidostat mode - try to keep cell density constant by dosing whenever the target is surpassed
+    Turbidostat mode - try to keep cell density constant by dosing whenever the target is surpassed by using PID method
     """
-
     automation_name = "pid_turbidostat"
     published_settings = {
         "target_normalized_od": {"datatype": "float", "settable": True, "unit": "AU"},
