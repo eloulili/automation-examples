@@ -155,8 +155,14 @@ class PIDTurbidostat(DosingAutomationJob):
 
 
 
+if __name__ == "__main__":
+    from pioreactor.background_jobs.dosing_control import DosingController
 
-
-
-
-
+    dc = DosingController(
+        "pid_turbidostat",
+        target_normalized_od=0.5,
+        duration=1,  # check every 1 minute
+        unit="test_unit",
+        experiment="test_experiment",
+    )
+    dc.block_until_disconnected()
