@@ -1,0 +1,88 @@
+experiment_profile_name: Turbidostat with growing temperature profile
+
+metadata:
+  description:  This experiment profile is a combination of a PID turbidostat and a temperature profile. The temperature is increased every 2 hours from 30°C to 36°C. The turbidostat is set to maintain the OD at 5.0.
+  author: Eliel DZIK
+  
+common:
+  jobs:
+    stirring:
+      actions:
+        - type: start
+          hours_elapsed: 0.0
+          options:
+            target_rpm: 600.0
+
+    temperature_control:
+      actions:
+            - type: start
+              hours_elapsed: 0.0
+              options:
+                automation_name: thermostat
+                target_temperature: 30.
+    
+    dosing_control:
+        actions:
+          - type: start
+            hours_elapsed: 0.0
+            options: 
+              automation_name: adapted_turbidostat
+              min_normalized_od: -1.
+              max_normalized_od: -1.
+              min_od: 1.
+              max_od: 1.1
+              duration: 0.5
+              volume: 0.4
+    add_alternative_media:
+        actions:
+          -type: repeat
+          hours_elapsed: 12.
+          repeat_every_hours: 24.
+          actions: 
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+            -type: start
+            hours_elapsed: 0.0
+            options:
+              ml: 1.
+
+
+

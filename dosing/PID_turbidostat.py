@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from contextlib import suppress
+
 from pioreactor.automations import events
 from pioreactor.automations.dosing.base import DosingAutomationJob
 from pioreactor.config import config

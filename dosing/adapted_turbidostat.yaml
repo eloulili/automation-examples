@@ -10,11 +10,11 @@ fields:
   - key: max_od  # as defined in Python
     unit: OD  # unit of your key
     label: Maximum OD  # human-readable name
-    default: null
+    default: -1
   - key: min_od  # as defined in Python
     unit: OD  # unit of your key
     label: Minimum OD  # human-readable name
-    default: null
+    default: -1
   - key: duration
     unit: min
     label: Check Interval
@@ -22,10 +22,10 @@ fields:
   - key: max_normalized_od
     unit: AU
     label: Maximum Normalized OD
-    default: null
+    default: -1
   - key: min_normalized_od
     unit: AU
     label: Minimum Normalized OD
-    default: null
+    default: -1
 
     

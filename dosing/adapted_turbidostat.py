@@ -34,8 +34,8 @@ class AdaptedTurbidostat(DosingAutomationJob):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        use_normalized_od = min_normalized_od is not None and max_normalized_od is not None
-        use_raw_od = min_od is not None and max_od is not None
+        use_normalized_od = (float(min_normalized_od) > 0 and float(max_normalized_od) > 0)
+        use_raw_od = float(min_od) > 0 and float(max_od) > 0
         with local_persistant_storage("current_pump_calibration") as cache:
             if "media" not in cache:
                 raise CalibrationError("Media pump calibration must be performed first.")
@@ -54,31 +54,32 @@ class AdaptedTurbidostat(DosingAutomationJob):
             self.use_normalized_od = False
 
         self.volume = float(volume)
+        self.min_od = float(min_od)
+        self.max_od = float(max_od)
+        self.max_normalized_od = float(max_normalized_od)
+        self.min_normalized_od = float(min_normalized_od)
+
 
     def execute(self) -> Optional[events.DilutionEvent]:
         if self.use_normalized_od:
             if self.latest_normalized_od >= self.max_normalized_od:
-                if self.is_pumping:
-                    # If the pump is already active and the  OD is still above the maximum, it means that we do not pump fast enough
-                    self.volume += 0.1
+                    
                 # Start or continue pumping if normalized OD is above the maximum threshold
                 return self._execute_max_normalized_od()
             elif self.is_pumping and self.latest_normalized_od >= self.min_normalized_od:
                 # Continue pumping if already in the pumping state and normalized OD is above the minimum threshold
-                return self._execute_pumping()
+                return self._execute_pumping_normalized_od()
             else:
                 return None
         else:
             if self.latest_od["2"] >= self.max_od:
-                if self.is_pumping:
-                    # Same as before
-                    self.volume += 0.1
                 # Start or continue pumping if OD is above the maximum threshold
                 return self._execute_max_od()
             elif self.is_pumping and self.latest_od["2"] >= self.min_od:
                 # Continue pumping if already in the pumping state and OD is above the minimum threshold
                 return self._execute_pumping()
             else:
+                self.is_pumping = False
                 return None
             
 
@@ -105,7 +106,6 @@ class AdaptedTurbidostat(DosingAutomationJob):
                 },
             )
         else:
-            self.is_pumping = False
             return None
 
 
@@ -117,12 +117,12 @@ class AdaptedTurbidostat(DosingAutomationJob):
 
     def _execute_pumping(self) -> Optional[events.DilutionEvent]:
         # Continue pumping until OD is below the minimum threshold
-     if self.latest_od["2"] >= self.min_od:
-         latest_od_before_dosing = self.latest_od["2"]
-         target_od_before_dosing = self.min_od
-         results = self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
-         media_moved = results["media_ml"]
-         return events.DilutionEvent(
+        if self.latest_od["2"] >= self.min_od and self.is_pumping:
+            latest_od_before_dosing = self.latest_od["2"]
+            target_od_before_dosing = self.min_od
+            results = self.execute_io_action(media_ml=self.volume, waste_ml=self.volume)
+            media_moved = results["media_ml"]
+            return events.DilutionEvent(
              f"Latest OD = {latest_od_before_dosing:.2f} ≥ Min OD = {target_od_before_dosing:.2f}; cycled {media_moved:.2f} mL",
              {
                  "latest_od": latest_od_before_dosing,
@@ -130,6 +130,6 @@ class AdaptedTurbidostat(DosingAutomationJob):
                  "volume": media_moved,
              },
          )
-     else:
-         self.is_pumping = False
-         return None
+    
+        else:
+            return None
